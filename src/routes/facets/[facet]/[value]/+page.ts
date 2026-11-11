@@ -1,4 +1,4 @@
-import type { FacetValueResponse } from '@openfoodfacts/openfoodfacts-nodejs';
+import type { Country, FacetValueResponse } from '@openfoodfacts/openfoodfacts-nodejs';
 import type { PageLoad } from './$types';
 import { getFacetKnowledgePanels, getFacetValue } from '#lib/api/facets.js';
 import { getBulkProductAttributesAndImages } from '#lib/api/bulk-product-details.js';
@@ -7,6 +7,12 @@ import { getOrDefault } from '#lib/api/taxonomy/types.js';
 import { getLocale } from '#lib/i18n/index.js';
 import { getFacetDistribution, queryValuesToDistribution } from './map-facets';
 import { MAP_FACETS } from '../map-facets';
+
+/** Two-letter code the per-country statistics and Hunger Games use, or null for "world". */
+function getCountryCode(country: Country | undefined): string | null {
+	const code = country?.country_code_2?.en?.toLowerCase();
+	return code && /^[a-z]{2}$/.test(code) ? code : null;
+}
 
 export const load: PageLoad = async ({ fetch, params, data }) => {
 	const { facet, value } = params;
@@ -89,6 +95,8 @@ export const load: PageLoad = async ({ fetch, params, data }) => {
 		productAttributes: details.attributesByCode,
 		distributionData: distribution,
 		mapIsPageLimited: !mapValues,
+		countryCode:
+			facet === 'countries' ? getCountryCode(taxo?.[value] as Country | undefined) : null,
 		mapFacet: mapFacet ?? null
 	};
 };

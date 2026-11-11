@@ -15,6 +15,7 @@
 	import ProductGrid from '#lib/ui/ProductGrid.svelte';
 	import PersonalizedSearchToggle from '#lib/ui/PersonalizedSearchToggle.svelte';
 	import BackLink from '#lib/ui/facets/BackLink.svelte';
+	import CountryStats from './CountryStats.svelte';
 
 	import type { PageProps } from './$types';
 	import {
@@ -155,6 +156,10 @@
 		</div>
 	{/if}
 {/await}
+
+{#if data.countryCode}
+	<CountryStats countryCode={data.countryCode} countryName={facet.value} />
+{/if}
 
 {#if distributionData && MapComponent && mapFacet}
 	<div class="my-8 w-full">

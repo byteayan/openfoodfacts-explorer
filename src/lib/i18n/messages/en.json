@@ -848,6 +848,20 @@
 		"mobile_nav": "Mobile navigation menu"
 	},
 	"facets": {
+		"country_stats": {
+			"title": "Products sold in {country}",
+			"created": "Products added",
+			"completed": "Products complete",
+			"completed_share": "{share} of the products added",
+			"chart_label": "Products added in {country} from {from} to {to}, reaching {count} products.",
+			"chart_caption": "Products added over time",
+			"help_title": "Help with products from {country}",
+			"help_categorize": "Categorize products",
+			"help_questions": "Answer questions about products",
+			"help_nutrition": "Complete nutrition tables",
+			"help_translate": "Translate Open Food Facts",
+			"help_guide": "Grow Open Food Facts in your country"
+		},
 		"names": {
 			"countries": "Countries",
 			"nutrition-grades": "Nutrition grades",
