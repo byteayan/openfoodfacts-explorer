@@ -6,7 +6,7 @@
 	import { beforeNavigate, goto } from '$app/navigation';
 	import { onDestroy } from 'svelte';
 
-	import { _ } from '#lib/i18n/index.js';
+	import { _, getLocale } from '#lib/i18n/index.js';
 	import { preferences } from '#lib/settings.js';
 	import { SORT_OPTIONS } from '#lib/const.js';
 	import {
@@ -19,7 +19,13 @@
 		type FacetsSelection
 	} from '#lib/search/facet-selection.js';
 	import { extractQuery, parseLuceneFacets, toLuceneString } from '#lib/search/lucene.js';
-	import { personalizedSearch, type AttributeGroup } from '#lib/stores/preferencesStore.js';
+	import {
+		personalizedSearch,
+		preferencesForFlavor,
+		type AttributeGroup
+	} from '#lib/stores/preferencesStore.js';
+	import { getWebsiteCtx } from '#lib/stores/website.js';
+	import { getFlavorAttributeGroups } from '#lib/api/attributeGroups.js';
 	import { personalizeSearchResults } from '#lib/productScoring.js';
 	import Pagination from '#lib/Pagination.svelte';
 	import Metadata from '#lib/Metadata.svelte';
@@ -45,6 +51,7 @@
 	let { data }: PageProps = $props();
 	let { search: searchResult } = $derived(data);
 	const toastCtx = getToastCtx();
+	const websiteCtx = getWebsiteCtx();
 	let isExportingCsv = $state(false);
 	let isNavigatingToSearch = $derived(navigating.to?.route.id === '/search');
 
@@ -59,7 +66,7 @@
 		const productsWithAttributes = searchResult.hits.map(associateAttributes);
 		const personalizedResults = personalizeSearchResults(
 			productsWithAttributes,
-			$personalizedSearch.userPreferences,
+			preferencesForFlavor($personalizedSearch.userPreferences, $websiteCtx.flavor),
 			$personalizedSearch.classifyProductsEnabled
 		);
 
@@ -76,6 +83,14 @@
 
 	// State for showing/hiding preferences
 	let showPreferences = $state(false);
+
+	// The load function fetches the food groups. Each other flavor has its own
+	// list, fetched once the panel is opened.
+	let preferenceGroups = $derived.by(() => {
+		if ($websiteCtx.flavor === 'food') return data.attributeGroups as AttributeGroup[];
+		if (!showPreferences) return [];
+		return getFlavorAttributeGroups(fetch, $websiteCtx.flavor, getLocale().split('-')[0]);
+	});
 
 	// State for showing/hiding advanced options panel
 	let showAdvancedOptions = $state(false);
@@ -455,7 +470,8 @@
 				<div class="collapse-content">
 					<PreferencesForm
 						onClose={() => (showPreferences = false)}
-						groups={data.attributeGroups as AttributeGroup[]}
+						flavor={$websiteCtx.flavor}
+						groups={preferenceGroups}
 					/>
 				</div>
 			</div>

@@ -87,6 +87,8 @@ export default defineConfig({
 						'https://*.openproductsfacts.net/',
 						'https://*.openbeautyfacts.org/',
 						'https://*.openbeautyfacts.net/',
+						'https://*.openpetfoodfacts.org/',
+						'https://*.openpetfoodfacts.net/',
 						'https://tile.openstreetmap.org',
 						'https://play.google.com',
 						'https://fdroid.gitlab.io',

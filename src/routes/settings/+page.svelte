@@ -6,6 +6,9 @@
 	import PreferencesForm from '#lib/ui/preferences/PreferencesForm.svelte';
 	import Tabs from '#lib/ui/Tabs.svelte';
 	import { personalizedSearch, type AttributeGroup } from '#lib/stores/preferencesStore.js';
+	import { getFlavorAttributeGroups } from '#lib/api/attributeGroups.js';
+	import { WEBSITE_FLAVORS, type WebsiteFlavor } from '#lib/flavor.js';
+	import { getWebsiteCtx } from '#lib/stores/website.js';
 	import { userInfo, getPermissionsCtx } from '#lib/stores/user.js';
 	import Metadata from '#lib/Metadata.svelte';
 	import { COMMIT_SHA } from '#lib/const.js';
@@ -42,6 +45,30 @@
 		'account'
 	);
 	let permissions = $derived(getPermissionsCtx());
+
+	const FLAVOR_TABS = [
+		{ label: 'food', i18nKey: 'product.edit.product_types.food' },
+		{ label: 'beauty', i18nKey: 'product.edit.product_types.beauty' },
+		{ label: 'petfood', i18nKey: 'product.edit.product_types.petfood' },
+		{ label: 'product', i18nKey: 'product.edit.product_types.product' }
+	] as const satisfies readonly { label: WebsiteFlavor; i18nKey: string }[];
+
+	const websiteCtx = getWebsiteCtx();
+	let preferencesFlavor = $state<WebsiteFlavor>($websiteCtx.flavor);
+
+	// The page load fetches the food groups. Each other flavor has its own
+	// list, fetched the first time its tab is opened.
+	let flavorGroups = $state.raw<Partial<Record<WebsiteFlavor, Promise<AttributeGroup[]>>>>({});
+
+	function showPreferencesFlavor(flavor: WebsiteFlavor) {
+		preferencesFlavor = flavor;
+		if (flavor === 'food' || flavorGroups[flavor]) return;
+
+		const groups = getFlavorAttributeGroups(fetch, flavor, getLocale().split('-')[0]);
+		flavorGroups = { ...flavorGroups, [flavor]: groups };
+	}
+
+	showPreferencesFlavor($websiteCtx.flavor);
 
 	let localeOptions = $derived(
 		availableLocales.map((code) => ({
@@ -364,7 +391,7 @@
 			<div class="card-body">
 				<h2 class="card-title flex items-center gap-2">
 					<IconMdiHeart class="h-6 w-6" aria-hidden="true" />
-					{$_('settings.food_preferences', { default: 'Food preferences' })}
+					{$_('settings.tab.preferences')}
 				</h2>
 
 				<div class="mt-6 rounded-box border border-base-300 bg-base-100 p-4">
@@ -389,7 +416,23 @@
 				</div>
 
 				<div class="mt-6">
-					<PreferencesForm groups={attributeGroups as AttributeGroup[]} />
+					<Tabs
+						tabs={FLAVOR_TABS}
+						activeTab={preferencesFlavor}
+						groupName="preferences-flavor-tabs"
+						onTabChange={(tab) => {
+							const flavor = WEBSITE_FLAVORS.find((flavor) => flavor === tab);
+							if (flavor) showPreferencesFlavor(flavor);
+						}}
+					/>
+					{#key preferencesFlavor}
+						<PreferencesForm
+							flavor={preferencesFlavor}
+							groups={preferencesFlavor === 'food'
+								? (attributeGroups as AttributeGroup[])
+								: (flavorGroups[preferencesFlavor] ?? [])}
+						/>
+					{/key}
 				</div>
 			</div>
 		</div>

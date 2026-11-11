@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { _ } from '#lib/i18n/index.js';
+	import type { WebsiteFlavor } from '#lib/flavor.js';
 	import {
 		getPreference,
 		personalizedSearch,
+		preferencesForFlavor,
 		type AttributeGroup,
 		type AttributeParameters,
 		type UserPreference
@@ -11,15 +13,20 @@
 
 	type Props = {
 		group: AttributeGroup;
+		flavor?: WebsiteFlavor;
 		onChange: (preference: UserPreference) => void;
 	};
 
-	let { group, onChange }: Props = $props();
+	let { group, flavor = 'food', onChange }: Props = $props();
+
+	let flavorPreferences = $derived(
+		preferencesForFlavor($personalizedSearch.userPreferences, flavor)
+	);
 
 	let { name: groupName, id: groupId, attributes = [], warning: warningText } = $derived(group);
 
 	function preferenceValue<T>(type: string, attributeId: string): T | undefined {
-		const userPreference = getPreference($personalizedSearch.userPreferences, groupId, attributeId);
+		const userPreference = getPreference(flavorPreferences, groupId, attributeId);
 		if (!userPreference) {
 			return undefined;
 		} else if (userPreference?.type !== type) {
@@ -105,7 +112,7 @@
 								<label class="flex cursor-pointer items-center gap-2">
 									<input
 										type="radio"
-										name={`${groupId}.${attribute.id}`}
+										name={`${flavor}.${groupId}.${attribute.id}`}
 										{value}
 										class="radio radio-sm radio-primary"
 										checked={selectedValue === value}

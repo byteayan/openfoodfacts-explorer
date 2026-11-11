@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { _ } from '#lib/i18n/index.js';
+	import type { WebsiteFlavor } from '#lib/flavor.js';
 	import Card from '../Card.svelte';
 	import PreferenceSection from './PreferenceSection.svelte';
 	import {
@@ -12,16 +13,19 @@
 
 	export type PreferencesFormProps = {
 		groups: AttributeGroup[] | Promise<AttributeGroup[]>;
+		/** Product type whose choices the form reads and saves. */
+		flavor?: WebsiteFlavor;
 
 		onPreferenceChange?: (preference: UserPreference) => void;
 		onClose?: () => void;
 	};
 
-	let { groups, onPreferenceChange, onClose }: PreferencesFormProps = $props();
+	let { groups, flavor = 'food', onPreferenceChange, onClose }: PreferencesFormProps = $props();
 
 	function handlePreferenceChange(preference: UserPreference) {
-		updateAttributePreference(preference);
-		onPreferenceChange?.(preference);
+		const flavored = { ...preference, flavor };
+		updateAttributePreference(flavored);
+		onPreferenceChange?.(flavored);
 	}
 
 	onMount(() => {
@@ -53,8 +57,12 @@
 			</div>
 		{:then groups}
 			{#each groups as group (group.id)}
-				<PreferenceSection {group} onChange={handlePreferenceChange} />
+				<PreferenceSection {group} {flavor} onChange={handlePreferenceChange} />
 			{/each}
+		{:catch}
+			<div class="alert alert-error" role="alert">
+				{$_('preferences.load_error', { default: 'Could not load these preferences.' })}
+			</div>
 		{/await}
 
 		<!-- Close Button -->

@@ -43,7 +43,7 @@
 	import { onMount } from 'svelte';
 	import { getShortcutCtx } from '#lib/stores/shortcuts.js';
 	import type { ProductGroupedAttributes } from './types';
-	import { personalizedSearch } from '#lib/stores/preferencesStore.js';
+	import { personalizedSearch, preferencesForFlavor } from '#lib/stores/preferencesStore.js';
 	import { PRODUCT_URL } from '#lib/const.js';
 	import { toWebsiteFlavor } from '#lib/flavor.js';
 	import { resolve } from '$app/paths';
@@ -273,9 +273,10 @@
 	// Only this preference affects the attributes API request. Other preference
 	// changes should update the score without reloading the product attributes.
 	let unwantedIngredients = $derived.by(() => {
-		const preference = $personalizedSearch.userPreferences.find(
-			(item) => item.attributeId === 'attribute_unwanted_ingredients_tags'
-		);
+		const preference = preferencesForFlavor(
+			$personalizedSearch.userPreferences,
+			$websiteCtx.flavor
+		).find((item) => item.attributeId === 'attribute_unwanted_ingredients_tags');
 		if (!preference) return undefined;
 		return preference.type === 'tags' ? preference.value.join(',') : preference.value;
 	});

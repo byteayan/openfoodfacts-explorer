@@ -8,6 +8,7 @@
 	import { getWebsiteCtx } from '#lib/stores/website.js';
 	import {
 		getPreference,
+		preferencesForFlavor,
 		personalizedSearch,
 		type AttributePreference
 	} from '#lib/stores/preferencesStore.js';
@@ -35,10 +36,11 @@
 	let tileAttributeIds = $derived(SCORE_TILE_IDS[$websiteCtx.flavor]);
 
 	let scoringGroups = $derived(groups as ProductAttributeForScoringGroup[]);
-	let hasPreferences = $derived($personalizedSearch.userPreferences.length > 0);
-	let preferences = $derived(
-		hasPreferences ? $personalizedSearch.userPreferences : defaultPreferences
+	let flavorPreferences = $derived(
+		preferencesForFlavor($personalizedSearch.userPreferences, $websiteCtx.flavor)
 	);
+	let hasPreferences = $derived(flavorPreferences.length > 0);
+	let preferences = $derived(hasPreferences ? flavorPreferences : defaultPreferences);
 	let scoreData = $derived(calculateScore(scoringGroups, preferences));
 	let showScore = $derived(scoreData.totalWeights > 0 && scoreData.matchStatus !== 'unknown_match');
 

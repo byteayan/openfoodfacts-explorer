@@ -4,7 +4,8 @@
 	import type { ProductAttributeForScoringGroup, ProductReduced } from '#lib/api.js';
 	import type { ScoreData } from '#lib/scoring.js';
 	import { personalizeSearchResults, type ProductWithAttributes } from '#lib/productScoring.js';
-	import { personalizedSearch } from '#lib/stores/preferencesStore.js';
+	import { personalizedSearch, preferencesForFlavor } from '#lib/stores/preferencesStore.js';
+	import { getWebsiteCtx } from '#lib/stores/website.js';
 
 	import WcProductCard from './WcProductCard.svelte';
 
@@ -21,6 +22,8 @@
 		sortByScore?: boolean;
 	};
 	let { products, attributes, sortByScore }: Props = $props();
+
+	const websiteCtx = getWebsiteCtx();
 
 	const UNKNOWN_SCORE_DATA: ScoreData = {
 		score: 0,
@@ -41,7 +44,7 @@
 
 		const personalizedSearchResults = personalizeSearchResults(
 			productsWithAttributes,
-			$personalizedSearch.userPreferences,
+			preferencesForFlavor($personalizedSearch.userPreferences, $websiteCtx.flavor),
 			sortByScore
 		);
 

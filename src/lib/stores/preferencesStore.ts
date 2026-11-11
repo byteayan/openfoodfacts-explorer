@@ -1,11 +1,14 @@
 import { persisted } from 'svelte-local-storage-store';
 
+import type { WebsiteFlavor } from '#lib/flavor.js';
 import type { AttributeParameters, Attribute, AttributeGroup } from '#lib/types/sdk-overrides.js';
 export type { AttributeParameters, Attribute, AttributeGroup };
 
 type BaseUserPreference = {
 	groupId: string;
 	attributeId: string;
+	/** Product type the choice applies to. Choices saved without one are food choices. */
+	flavor?: WebsiteFlavor;
 };
 
 // Specific preference type for attributes
@@ -51,12 +54,27 @@ export function attributesToDefaultPreferences(
 	);
 }
 
+export function preferenceFlavor(preference: UserPreference): WebsiteFlavor {
+	return preference.flavor ?? 'food';
+}
+
+/** The same attribute ids exist on several flavors, so each flavor reads only its own choices. */
+export function preferencesForFlavor(
+	prefs: UserPreference[],
+	flavor: WebsiteFlavor
+): UserPreference[] {
+	return prefs.filter((p) => preferenceFlavor(p) === flavor);
+}
+
 export function updateAttributePreference(preference: UserPreference) {
 	personalizedSearch.update((store) => {
 		const prefs = store.userPreferences;
 
 		const existingPreferenceIndex = prefs.findIndex(
-			(p) => p.groupId === preference.groupId && p.attributeId === preference.attributeId
+			(p) =>
+				p.groupId === preference.groupId &&
+				p.attributeId === preference.attributeId &&
+				preferenceFlavor(p) === preferenceFlavor(preference)
 		);
 
 		if (existingPreferenceIndex >= 0) {
